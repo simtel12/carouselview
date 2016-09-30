@@ -298,7 +298,7 @@ public class CarouselView extends FrameLayout {
         @Override
         public Object instantiateItem(ViewGroup collection, int position) {
 
-            CarouselView carouselView = mmView.get();
+            CarouselView carouselView = mmView != null ? mmView.get() : null;
             if(carouselView == null) {
                 return null;
             }
@@ -349,7 +349,7 @@ public class CarouselView extends FrameLayout {
 
         @Override
         public int getCount() {
-            CarouselView view = mmView.get();
+            CarouselView view = mmView != null ? mmView.get() : null;
             if(view != null) {
                 return view.getPageCount();
             }
