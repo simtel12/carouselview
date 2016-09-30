@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RemoteViews.RemoteView;
 
+import java.lang.ref.WeakReference;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -43,8 +44,8 @@ public class CarouselView extends FrameLayout {
 
     private CarouselViewPager containerViewPager;
     private CirclePageIndicator mIndicator;
-    private ViewListener mViewListener = null;
-    private ImageListener mImageListener = null;
+    private WeakReference<ViewListener> mViewListener;
+    private WeakReference<ImageListener> mImageListener;
 
     private Timer swipeTimer;
     private SwipeTask swipeTask;
@@ -227,7 +228,7 @@ public class CarouselView extends FrameLayout {
     }
 
     private void setData() {
-        CarouselPagerAdapter carouselPagerAdapter = new CarouselPagerAdapter(getContext());
+        CarouselPagerAdapter carouselPagerAdapter = new CarouselPagerAdapter();
         containerViewPager.setAdapter(carouselPagerAdapter);
         mIndicator.setViewPager(containerViewPager);
         mIndicator.requestLayout();
@@ -287,34 +288,40 @@ public class CarouselView extends FrameLayout {
     }
 
 
-    private class CarouselPagerAdapter extends PagerAdapter {
-        private Context mContext;
+    private static class CarouselPagerAdapter extends PagerAdapter {
 
-        public CarouselPagerAdapter(Context context) {
-            mContext = context;
+        WeakReference<CarouselView>  mmView;
+
+        CarouselPagerAdapter() {
         }
 
         @Override
         public Object instantiateItem(ViewGroup collection, int position) {
 
+            CarouselView carouselView = mmView.get();
+            if(carouselView == null) {
+                return null;
+            }
+
             Object objectToReturn;
-
+            ImageListener imageListener = carouselView.getImageListener();
+            ViewListener viewListener = carouselView.getViewListener();
             //Either let user set image to ImageView
-            if (mImageListener != null) {
+            if (imageListener != null) {
 
-                ImageView imageView = new ImageView(mContext);
+                ImageView imageView = new ImageView(collection.getContext());
                 imageView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));  //setting image position
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
                 objectToReturn = imageView;
-                mImageListener.setImageForPosition(position, imageView);
+                imageListener.setImageForPosition(position, imageView);
 
                 collection.addView(imageView);
 
                 //Or let user add his own ViewGroup
-            } else if (mViewListener != null) {
+            } else if (viewListener != null) {
 
-                View view = mViewListener.setViewForPosition(position);
+                View view = viewListener.setViewForPosition(position);
 
                 if (null != view) {
                     objectToReturn = view;
@@ -342,7 +349,11 @@ public class CarouselView extends FrameLayout {
 
         @Override
         public int getCount() {
-            return getPageCount();
+            CarouselView view = mmView.get();
+            if(view != null) {
+                return view.getPageCount();
+            }
+            return 0;
         }
     }
 
@@ -395,12 +406,26 @@ public class CarouselView extends FrameLayout {
         }
     }
 
-    public void setImageListener(ImageListener mImageListener) {
-        this.mImageListener = mImageListener;
+    public void setImageListener(ImageListener imageListener) {
+        this.mImageListener = new WeakReference<ImageListener>(imageListener);
     }
 
-    public void setViewListener(ViewListener mViewListener) {
-        this.mViewListener = mViewListener;
+    public void setViewListener(ViewListener viewListener) {
+        this.mViewListener = new WeakReference<ViewListener>(viewListener);
+    }
+
+    private ViewListener getViewListener() {
+        if(mViewListener != null) {
+            return mViewListener.get();
+        }
+        return null;
+    }
+
+    private ImageListener getImageListener() {
+        if(mImageListener != null) {
+            return mImageListener.get();
+        }
+        return null;
     }
 
     public int getPageCount() {
