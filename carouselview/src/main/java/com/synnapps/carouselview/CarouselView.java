@@ -49,6 +49,7 @@ public class CarouselView extends FrameLayout {
     private Timer swipeTimer;
     private SwipeTask swipeTask;
 
+    private boolean autoPlayStopped;
     private boolean autoPlay;
     private boolean disableAutoPlayOnUserInteraction;
     private boolean animateOnBoundary = true;
@@ -237,7 +238,11 @@ public class CarouselView extends FrameLayout {
     }
 
     private void stopScrollTimer() {
+        autoPlayStopped = true;
+        stopScrollTimerImpl();
+    }
 
+    private void stopScrollTimerImpl() {
         if (null != swipeTimer) {
             swipeTimer.cancel();
         }
@@ -267,6 +272,7 @@ public class CarouselView extends FrameLayout {
         if (autoPlay && slideInterval > 0 && containerViewPager.getAdapter() != null && containerViewPager.getAdapter().getCount() > 1) {
 
             swipeTimer.schedule(swipeTask, slideInterval, slideInterval);
+            autoPlayStopped = false;
         }
     }
 
@@ -286,6 +292,21 @@ public class CarouselView extends FrameLayout {
         this.autoPlay = false;
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        // Internally stop scrolling - but don't reset our variables so that we can restart if/when we're reattached to a window
+        stopScrollTimerImpl();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        // If the carousel wasn't stopped explicitly, then resume when we're reattached
+        if(swipeTimer != null && !autoPlayStopped) {
+            playCarousel();
+        }
+    }
 
     private class CarouselPagerAdapter extends PagerAdapter {
         private Context mContext;
