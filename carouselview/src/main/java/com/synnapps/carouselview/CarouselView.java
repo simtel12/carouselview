@@ -44,8 +44,10 @@ public class CarouselView extends FrameLayout {
 
     private CarouselViewPager containerViewPager;
     private CirclePageIndicator mIndicator;
-    private WeakReference<ViewListener> mViewListener;
-    private WeakReference<ImageListener> mImageListener;
+    private WeakReference<ViewListener> mViewListenerRef;
+    private WeakReference<ImageListener> mImageListenerRef;
+    private ViewListener mViewListener;
+    private ImageListener mImageListener;
 
     private Timer swipeTimer;
     private SwipeTask swipeTask;
@@ -315,23 +317,35 @@ public class CarouselView extends FrameLayout {
 
     private static class CarouselPagerAdapter extends PagerAdapter {
 
+        CarouselView  mView;
         WeakReference<CarouselView>  mmView;
 
+        private CarouselView getView() {
+            return mView;
+//            return mmView != null ? mmView.get() : null;
+        }
+
+        private ImageListener getImageListener() {
+            CarouselView view = getView();
+            return (view != null ? view.getImageListener() : null);
+        }
+
+        private ViewListener getViewListener() {
+            CarouselView view = getView();
+            return (view != null ? view.getViewListener() : null);
+        }
+
         CarouselPagerAdapter(CarouselView view) {
+            mView = view;
             mmView = new WeakReference<CarouselView>(view);
         }
 
         @Override
         public Object instantiateItem(ViewGroup collection, int position) {
 
-            CarouselView carouselView = mmView != null ? mmView.get() : null;
-            if(carouselView == null) {
-                return null;
-            }
-
             Object objectToReturn;
-            ImageListener imageListener = carouselView.getImageListener();
-            ViewListener viewListener = carouselView.getViewListener();
+            ImageListener imageListener = getImageListener();
+            ViewListener viewListener = getViewListener();
             //Either let user set image to ImageView
             if (imageListener != null) {
 
@@ -435,25 +449,29 @@ public class CarouselView extends FrameLayout {
     }
 
     public void setImageListener(ImageListener imageListener) {
-        this.mImageListener = new WeakReference<ImageListener>(imageListener);
+        this.mImageListenerRef = new WeakReference<ImageListener>(imageListener);
+        mImageListener = imageListener;
     }
 
     public void setViewListener(ViewListener viewListener) {
-        this.mViewListener = new WeakReference<ViewListener>(viewListener);
+        this.mViewListenerRef = new WeakReference<ViewListener>(viewListener);
+        mViewListener = viewListener;
     }
 
     private ViewListener getViewListener() {
-        if(mViewListener != null) {
-            return mViewListener.get();
-        }
-        return null;
+//        if(mViewListenerRef != null) {
+//            return mViewListenerRef.get();
+//        }
+//        return null;
+        return mViewListener;
     }
 
     private ImageListener getImageListener() {
-        if(mImageListener != null) {
-            return mImageListener.get();
-        }
-        return null;
+//        if(mImageListenerRef != null) {
+//            return mImageListenerRef.get();
+//        }
+//        return null;
+        return mImageListener;
     }
 
     public int getPageCount() {
