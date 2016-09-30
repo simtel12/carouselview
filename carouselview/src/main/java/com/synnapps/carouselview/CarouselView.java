@@ -228,7 +228,7 @@ public class CarouselView extends FrameLayout {
     }
 
     private void setData() {
-        CarouselPagerAdapter carouselPagerAdapter = new CarouselPagerAdapter();
+        CarouselPagerAdapter carouselPagerAdapter = new CarouselPagerAdapter(this);
         containerViewPager.setAdapter(carouselPagerAdapter);
         mIndicator.setViewPager(containerViewPager);
         mIndicator.requestLayout();
@@ -292,7 +292,8 @@ public class CarouselView extends FrameLayout {
 
         WeakReference<CarouselView>  mmView;
 
-        CarouselPagerAdapter() {
+        CarouselPagerAdapter(CarouselView view) {
+            mmView = new WeakReference<CarouselView>(view);
         }
 
         @Override
